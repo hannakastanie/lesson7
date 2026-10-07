@@ -15,12 +15,13 @@ var cafeList = map[string][]string{
 func mainHandle(w http.ResponseWriter, req *http.Request) {
 	var err error
 
-	// если count не указан, то возвращается 25 записей
+	// если count не укан, то возвращается 25 записей
+	// если count меньше 0 или не конвертируется, возвращается http.StatusBadRequest
 	count := 25
 	countStr := req.FormValue("count")
-	if countStr != "" {
+	if countStr != ""{
 		count, err = strconv.Atoi(countStr)
-		if err != nil {
+		if err != nil || count < 0{
 			http.Error(w, "incorrect count", http.StatusBadRequest)
 			return
 		}
