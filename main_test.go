@@ -54,12 +54,12 @@ func TestCafeWhenOk(t *testing.T) {
 
 func TestCafeCount(t *testing.T) {
 	handler := http.HandlerFunc(mainHandle)
-	
+
 	count := len(cafeList["moscow"])
 
 	requests := []struct {
-		request		string
-		wantCount	int
+		request   string
+		wantCount int
 	}{
 		{"/cafe?count=0&city=moscow", 0},
 		{"/cafe?count=1&city=moscow", 1},
@@ -72,30 +72,31 @@ func TestCafeCount(t *testing.T) {
 		handler.ServeHTTP(response, req)
 
 		answer := response.Body.String()
-		
+
 		require.Equal(t, http.StatusOK, response.Code)
-		if answer == ""{
-			assert.Equal(t, v.wantCount, len(answer))
-		}else{
+		if answer == "" {
+			assert.Len(t, answer, v.wantCount)
+		} else {
 			result := strings.Split(answer, ",")
-			assert.Equal(t, v.wantCount, len(result))
+			assert.Len(t, result, v.wantCount)
 		}
 	}
 }
 
 func TestCafeSearch(t *testing.T) {
 	handler := http.HandlerFunc(mainHandle)
-	
+
 	requests := []struct {
-		request		string
-		wantCount	int
+		request    string
+		wantCount  int
+		wantSearch string
 	}{
-		{"/cafe?city=moscow&search=фасоль", 0},
-		{"/cafe?city=moscow&search=кофе", 2},
-		{"/cafe?city=moscow&search=вилка", 1},
-		{"/cafe?city=moscow&search=ФЛЮГЕГЕХАЙМЕН", 0},
-		{"/cafe?city=moscow&count=1&search=кофе", 1},
-		{"/cafe?city=moscow&search=кофе&count=1", 1},
+		{"/cafe?city=moscow&search=фасоль", 0, ""},
+		{"/cafe?city=moscow&search=кофе", 2, "кофе"},
+		{"/cafe?city=moscow&search=вилка", 1, "вилка"},
+		{"/cafe?city=moscow&search=ФЛЮГЕГЕХАЙМЕН", 0, ""},
+		{"/cafe?city=moscow&count=1&search=кофе", 1, "кофе"},
+		{"/cafe?city=moscow&search=кофе&count=1", 1, "кофе"},
 	}
 	for _, v := range requests {
 		response := httptest.NewRecorder()
@@ -103,13 +104,19 @@ func TestCafeSearch(t *testing.T) {
 		handler.ServeHTTP(response, req)
 
 		answer := response.Body.String()
-		
+
 		require.Equal(t, http.StatusOK, response.Code)
-		if answer == ""{
-			assert.Equal(t, v.wantCount, len(answer))
-		}else{
+		if answer == "" {
+			assert.Len(t, answer, v.wantCount)
+		} else {
 			result := strings.Split(answer, ",")
-			assert.Equal(t, v.wantCount, len(result))
+			assert.Len(t, result, v.wantCount)
+			for _, eachResult := range result {
+				assert.True(t, strings.Contains(
+					strings.ToLower(eachResult),
+					strings.ToLower(v.wantSearch),
+				))
+			}
 		}
 	}
 }
